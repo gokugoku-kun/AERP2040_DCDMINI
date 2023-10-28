@@ -1,0 +1,68 @@
+;
+; Copyright (c) 2023 gokugoku
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+.program pio_lcd
+.wrap_target
+    pull
+    set pins, 0x0E            ; ( RD, WR, RS, CS ) = ( H, H, H, L ) CS = L
+    set pins, 0x0A            ; ( RD, WR, RS, CS ) = ( H, L, H, L ) WR = L
+    out pins, 8               ; OSRから8bit分出力ポートへ
+    nop                       ;最小幅確保
+    set pins, 0x0E            ; ( RD, WR, RS, CS ) = ( H, H, H, L ) WR = H
+    nop                       ;最小幅確保
+    set pins, 0x0A            ; ( RD, WR, RS, CS ) = ( H, L, H, L ) WR = L
+    out pins, 8               ; OSRから8bit分出力ポートへ
+    nop                       ;最小幅確保
+    set pins, 0x0E            ; ( RD, WR, RS, CS ) = ( H, H, H, L ) WR = H
+    set pins, 0x0F            ; ( RD, WR, RS, CS ) = ( H, H, H, H ) CS = H
+.wrap
+
+
+% c-sdk {
+static inline void pio_lcd_program_init( PIO pio, uint sm, uint offset, uint out_base ,uint out_pin_num, uint set_base ,uint set_pin_num )
+{
+    pio_sm_config c = pio_lcd_program_get_default_config( offset );
+        /* PIOステートマシンコンフィグのデフォルト値を取得 */
+
+    sm_config_set_out_pins( &c, out_base, out_pin_num );
+        /* PIOステートマシンコンフィグの出力ピン設定を編集する */
+        /* ベースピン番号とベースから何ピンまで使うかを指定 */
+    sm_config_set_set_pins( &c, set_base, set_pin_num );
+        /* PIOステートマシンコンフィグのSETピン設定を編集する */
+        /* ベースピン番号とベースから何ピンまで使うかを指定 */
+
+    {
+        uint pin_offset;
+        for ( pin_offset = 0; pin_offset < out_pin_num; pin_offset++ )
+        {
+            pio_gpio_init( pio, out_base + pin_offset );
+            /* GPIOをPIOに割り当てる */
+        }
+        for ( pin_offset = 0; pin_offset < set_pin_num; pin_offset++ )
+        {
+            pio_gpio_init( pio, set_base + pin_offset );
+            /* GPIOをPIOに割り当てる */
+        }
+    }
+
+    pio_sm_set_consecutive_pindirs( pio, sm, out_base, out_pin_num, true );
+        /* ピンの向きを設定 */
+    pio_sm_set_consecutive_pindirs( pio, sm, set_base, set_pin_num, true );
+        /* ピンの向きを設定 */
+
+    //sm_config_set_clkdiv( &c, 2 );
+        /* クロック周波数2分周 */
+
+    sm_config_set_out_shift( &c, true, true, 16 );
+        /* シフト方向を右に設定 */
+
+    pio_sm_init( pio, sm, offset, &c );
+        /* PIOステートマシンコンフィグを反映しプログラムカウンタを設定 */
+
+    pio_sm_set_enabled( pio, sm, true );
+        /* PIOステートマシンを有効にする */
+}
+%}

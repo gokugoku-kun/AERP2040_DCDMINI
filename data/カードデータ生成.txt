@@ -1,0 +1,12 @@
+■映像データmovie.rgbの作成
+ffmpegでサイズ400:240/30fps/rgb24のデータ生成
+　コマンド例：ffmpeg -i movie.mp4 -vf "crop=1280:768:0:0, scale=400:240, transpose=1" -c:v rawvideo -pix_fmt rgb24 -r 30 movie.rgb
+
+■音声データoutput.rawの作成
+audacityで22050Hz/U8のデータ生成
+
+■カード用データtest.binの作成
+GenBin.pyを実行する
+
+これをddwin.exeでカードに書く
+
