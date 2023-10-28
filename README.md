@@ -2,7 +2,13 @@
 
 試作基板/試作コードのため不備が多々あります。ご理解の上ご利用ください。
 
+
+
 基板ガーバーデータについてはJLCPCBに発注し動作確認しています。
+
+コードは下記をベースにしています。
+
+https://github.com/raspberrypi/pico-playground/tree/master/apps/popcorn
 
 
 
